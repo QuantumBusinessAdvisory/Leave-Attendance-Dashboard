@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Data (Sensitive & Large)
+Backend/data/
+*.parquet
+*.csv
+
+# Logs
+Backend/refresh.log
+Frontend/ShinyApps/refresh.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Sensitive Config
+# Recommendation: Move API keys to .env and use python-dotenv
+# Backend/Config.py (If you hardcode keys, don't upload this or use placeholders)

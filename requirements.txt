@@ -1,0 +1,12 @@
+# Dashboard Requirements (Global)
+shiny
+shinywidgets
+pandas
+plotly
+watchfiles
+anywidget
+pyarrow
+fastparquet
+requests
+ast
+uvicorn
