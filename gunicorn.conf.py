@@ -1,14 +1,17 @@
-# Gunicorn configuration for Azure App Service
+# Gunicorn configuration for Azure Linux
 import multiprocessing
 
-# Bind to the standard Azure port
+# Port binding
 bind = "0.0.0.0:8000"
 
-# Enable Uvicorn workers for ASGI (Shiny) support
+# FORCE Uvicorn worker for ASGI (Shiny)
 worker_class = "uvicorn.workers.UvicornWorker"
 
-# Timeout adjustment for large dashboard loads
+# Increase timeout for slow dashboard loads
 timeout = 600
 
-# Worker count (optional, Azure usually manages this)
+# Worker count
 workers = multiprocessing.cpu_count() * 2 + 1
+
+# Print config for debugging
+print(f"Starting Gunicorn with worker_class: {worker_class}")
