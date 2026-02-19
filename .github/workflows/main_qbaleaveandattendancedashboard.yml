@@ -65,4 +65,4 @@ jobs:
         with:
           app-name: 'qbaleaveandattendancedashboard'
           slot-name: 'Production'
-          startup-command: 'gunicorn --bind=0.0.0.0 --timeout 600 production:app -k uvicorn.workers.UvicornWorker'
+          startup-command: 'gunicorn --bind=0.0.0.0 --timeout 600 app:app -k uvicorn.workers.UvicornWorker'
