@@ -1,0 +1,11 @@
+shiny
+pandas
+plotly
+shinywidgets
+pyarrow
+faicons
+requests
+gunicorn
+uvicorn
+numpy
+watchfiles
