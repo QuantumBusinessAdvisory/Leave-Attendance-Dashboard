@@ -2,13 +2,19 @@
 import os
 import sys
 
-# Add the dashboard directory to python path so imports work correctly inside app.py
-sys.path.append(os.path.join(os.path.dirname(__file__), "Frontend", "ShinyApps"))
+# Define the path to the actual dashboard folder
+DASHBOARD_DIR = os.path.join(os.path.dirname(__file__), "Frontend", "ShinyApps")
 
-# Import the app object from the actual dashboard file
-from Frontend.ShinyApps.app import app
+# Add the dashboard directory to the python path
+if DASHBOARD_DIR not in sys.path:
+    sys.path.append(DASHBOARD_DIR)
 
-# Azure/Gunicorn looks for 'app' in the entry point file
+# Import the dashboard app using its module name directly
+# This avoids relative/package import issues on some hosting environments
+import app as dashboard_module
+app = dashboard_module.app
+
+# Local runner (for testing)
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
