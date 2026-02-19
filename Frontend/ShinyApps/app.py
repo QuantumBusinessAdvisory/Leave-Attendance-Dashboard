@@ -1093,7 +1093,7 @@ def server(input, output, session):
         p['Total'] = p.sum(axis=1)
         
         # Format decimals
-        p = p.applymap(lambda x: f"{x:.2f}" if x != 0 else "")
+        p = p.map(lambda x: f"{x:.2f}" if x != 0 else "")
         
         res = p.reset_index().rename(columns={'index': 'Leave type'})
         return res
