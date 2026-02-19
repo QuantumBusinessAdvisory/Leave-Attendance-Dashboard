@@ -23,7 +23,26 @@ spec.loader.exec_module(module)
 # The 'app' object required by Gunicorn/Uvicorn
 app = module.app
 
-# Local testing
+# Local runner for "Double-Click" experience
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    import webbrowser
+    import threading
+    import time
+    
+    URL = "http://127.0.0.1:8000"
+    
+    def open_browser():
+        # Small delay to ensure server is starting
+        time.sleep(2)
+        print(f"Opening browser at {URL}...")
+        try:
+            webbrowser.open(URL)
+        except Exception as e:
+            print(f"[INFO] Manual navigation required: {URL}")
+
+    if os.name == 'nt': # Windows specific
+        threading.Thread(target=open_browser, daemon=True).start()
+        
+    print(f"Starting QBA Dashboard at {URL}")
+    uvicorn.run(app, host="127.0.0.1", port=8000)
