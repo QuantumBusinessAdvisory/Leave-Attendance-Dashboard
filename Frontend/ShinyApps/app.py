@@ -121,18 +121,24 @@ class DashboardData:
             self.DF['alloc_mapped'] = pd.DataFrame(flattened).drop_duplicates()
 
         # Slicer Lists
-        ud = self.DF['users_details']
+        ud = self.DF.get('users_details', pd.DataFrame())
         pdm = self.DF.get('projects_details_mapped', pd.DataFrame())
+        
+        # Helper to get unique sorted list safely
+        def get_list(df, col):
+            if df.empty or col not in df.columns: return []
+            return sorted(df[col].dropna().unique().tolist())
+
         self.Lists = {
-            'D': sorted(ud['department_name_t'].dropna().unique().tolist()),
-            'E': sorted(ud['employee_name_t'].dropna().unique().tolist()),
-            'M': sorted(ud['reporting_manager_name_t'].dropna().unique().tolist()),
-            'ET': sorted(ud['employment_type_t'].dropna().unique().tolist()),
-            'PN': sorted(pdm['project_name'].astype(str).str.title().dropna().unique().tolist()) if not pdm.empty else [],
-            'PM': sorted(pdm['project_manager'].astype(str).str.title().dropna().unique().tolist()) if not pdm.empty else [],
-            'WS': sorted(self.DF['attendance']['workflow_state'].dropna().unique().tolist()) if not self.DF['attendance'].empty else [],
-            'LT': sorted(self.DF['leave_applications']['leave_type'].astype(str).str.title().unique().tolist()) if not self.DF['leave_applications'].empty else [],
-            'AT': sorted(self.DF['attendance']['mode_of_attendance'].astype(str).str.title().unique().tolist()) if not self.DF['attendance'].empty else []
+            'D': get_list(ud, 'department_name_t'),
+            'E': get_list(ud, 'employee_name_t'),
+            'M': get_list(ud, 'reporting_manager_name_t'),
+            'ET': get_list(ud, 'employment_type_t'),
+            'PN': get_list(pdm, 'project_name') if not pdm.empty else [],
+            'PM': get_list(pdm, 'project_manager') if not pdm.empty else [],
+            'WS': get_list(self.DF.get('attendance', pd.DataFrame()), 'workflow_state'),
+            'LT': [str(x).title() for x in get_list(self.DF.get('leave_applications', pd.DataFrame()), 'leave_type')],
+            'AT': [str(x).title() for x in get_list(self.DF.get('attendance', pd.DataFrame()), 'mode_of_attendance')]
         }
 
 DB = DashboardData()

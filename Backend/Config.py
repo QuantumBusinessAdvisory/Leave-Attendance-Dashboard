@@ -1,14 +1,10 @@
-# config.py
+# Config.py in Backend
 
-# API Authentication
-# The user specified format: "Authorization": "token <api_key>:<api_secret>"
 API_HEADERS = {
     "Authorization": "token 762913b0eb9f140:1205f410c1b7b31",
     "Content-Type": "application/json"
 }
 
-# List of API Endpoints
-# We will add more here later.
 API_ENDPOINTS = {
     "leave_balance": "https://hr.qbadvisory.com/api/method/hrms.api.employee.get_all_employees_leave_balance",
     "leave_applications": "https://hr.qbadvisory.com/api/method/hrms.api.employee.get_all_employees_leave_applications",

@@ -95,7 +95,11 @@ def main():
 
     if server_ready:
         print(f"Opening browser at {URL}")
-        webbrowser.open(URL)
+        try:
+            webbrowser.open(URL)
+        except Exception as e:
+            print(f"[INFO] Could not automatically open browser: {e}")
+            print(f"Please manually navigate to: {URL}")
     else:
         print("\n\n[ERROR] Server failed to start within 30 seconds.")
         process.terminate()
@@ -111,7 +115,7 @@ def main():
     except Exception as e:
         print(f"\n[ERROR] Unexpected error: {e}")
         
-    if process.returncode != 0:
+    if process.returncode is not None and process.returncode != 0:
         sys.exit(process.returncode)
 
 if __name__ == "__main__":
