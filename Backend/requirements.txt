@@ -7,7 +7,7 @@ faicons
 requests
 gunicorn
 uvicorn[standard]
-uvicorn-worker
 numpy
 watchfiles
-fcntl
+# fcntl is only for Linux/Azure
+fcntl; sys_platform != 'win32'
