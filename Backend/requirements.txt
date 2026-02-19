@@ -10,3 +10,4 @@ uvicorn[standard]
 uvicorn-worker
 numpy
 watchfiles
+portalocker
