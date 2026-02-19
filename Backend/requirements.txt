@@ -6,6 +6,7 @@ pyarrow
 faicons
 requests
 gunicorn
-uvicorn
+uvicorn[standard]
+uvicorn-worker
 numpy
 watchfiles
