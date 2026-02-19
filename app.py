@@ -1,4 +1,4 @@
-# Production entry point for Azure Hosting
+# Root entry point for QBA Dashboard (Local & Azure)
 import os
 import sys
 import importlib.util
@@ -7,13 +7,8 @@ import importlib.util
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DASHBOARD_DIR = os.path.join(BASE_DIR, "Frontend", "ShinyApps")
 
-# Add subfolder to path (at the end to prefer explicit loading)
-if DASHBOARD_DIR not in sys.path:
-    sys.path.append(DASHBOARD_DIR)
-
 # 2. Robustly load the actual app.py from the subfolder
-# This avoids the error "App.__call__() missing 1 required positional argument: 'send'"
-# by ensuring we are importing the correct Shiny App instance.
+# We use importlib to avoid "import app" colliding with the root app.py filename
 app_path = os.path.join(DASHBOARD_DIR, "app.py")
 spec = importlib.util.spec_from_file_location("dashboard_app", app_path)
 module = importlib.util.module_from_spec(spec)
@@ -41,7 +36,8 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"[INFO] Manual navigation required: {URL}")
 
-    if os.name == 'nt': # Windows specific
+    # Only open browser on Windows local
+    if os.name == 'nt':
         threading.Thread(target=open_browser, daemon=True).start()
         
     print(f"Starting QBA Dashboard at {URL}")
