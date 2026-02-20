@@ -198,34 +198,34 @@ app_ui = ui.page_fluid(
             letter-spacing: -0.01em; 
         }
 
-        /* Modern Slicer Row */
+        /* Modern Slicer Row - Floating cards on background */
         .slicer-row { 
             display: flex; 
+            flex-wrap: wrap;
             gap: 12px; 
-            padding: 12px 20px; 
-            background: white; 
-            border-bottom: 1px solid #e2e8f0; 
-            overflow-x: auto; 
-            white-space: nowrap;
-            margin-bottom: 20px;
-            box-shadow: var(--shadow);
+            padding: 15px 20px; 
+            background: transparent; 
+            border: none; 
+            margin-bottom: 10px;
             align-items: center;
         }
         
         .slicer-box { 
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            flex: 1 1 0px;
-            min-width: 140px; 
-            height: 68px;
+            justify-content: flex-start; /* Start from top as per padding request */
+            align-items: center;        /* Horizontal alignment */
             background: white; 
             border-radius: 12px; 
-            padding: 14px 12px 10px 12px;
+            padding: 12px 10px 0 10px; /* 12px from top */
             border: 1px solid var(--accent);
             text-align: center;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+            box-shadow: var(--shadow);
+            width: 13.5%; 
+            min-width: 150px;
+            height: 65px;
+            gap: 2px;
         }
         .slicer-box:hover {
             transform: translateY(-2px);
@@ -238,15 +238,18 @@ app_ui = ui.page_fluid(
             font-size: 0.65rem; 
             font-weight: 700; 
             color: #64748b; 
-            margin-bottom: 2px; 
             text-transform: uppercase; 
             letter-spacing: 0.06em;
-            line-height: 1.2;
+            line-height: 1;
+            text-align: center;
+            width: 100%;
+            margin: 0;
+            padding: 0;
         }
         .slicer-box select, .tree-btn { 
             width: 100%; 
             border: none !important; 
-            font-size: 0.9rem; 
+            font-size: 0.95rem; 
             background: transparent !important; 
             color: var(--primary); 
             font-weight: 700;
@@ -255,8 +258,10 @@ app_ui = ui.page_fluid(
             cursor: pointer;
             text-align: center;
             text-align-last: center;
-            height: 30px;
-            line-height: 30px;
+            height: 28px;
+            line-height: 28px;
+            appearance: none;
+            margin: 0;
         }
         .slicer-box select option {
             text-align: center;
@@ -310,8 +315,9 @@ app_ui = ui.page_fluid(
 
         .tree-container { min-width: 220px; padding: 15px; }
         table { font-size: 0.85rem !important; width: 100%; border-collapse: collapse; }
-        th { background: #f8fafc; color: var(--primary); font-weight: 700; padding: 12px; border-bottom: 2px solid #e2e8f0; text-align: center; }
-        td { padding: 12px; border-bottom: 1px solid #f1f5f9; white-space: nowrap; text-align: center; color: var(--text-main); }
+        th { background: #f8fafc; color: var(--primary); font-weight: 700; padding: 12px; border-bottom: 2px solid #e2e8f0; border-right: 1px solid #cbd5e1; text-align: center; white-space: nowrap; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; border-right: 1px solid #cbd5e1; white-space: nowrap; text-align: center; color: var(--text-main); }
+        th:last-child, td:last-child { border-right: none; }
         .total-row { font-weight: 700; background: #f8fafc; }
         .table-scroll { overflow: auto; max-height: 480px; border: 1px solid #e2e8f0; border-radius: 12px; }
         table thead th { position: sticky; top: 0; background: #f8fafc; z-index: 10; }
@@ -502,9 +508,9 @@ app_ui = ui.page_fluid(
         ui.div("QBA Leave & Attendance Dashboard", class_="title")
     ),
     
-    # Global Synced Slicer Row (Static for 100% Persistence)
+    # Global Synced Slicer Row (Refactored with unique IDs per tab to avoid DOM duplication errors)
     ui.div({"class": "slicer-row"},
-        # 1. Period (Universal)
+        # SLOT 1: Period (Always)
         ui.div({"class": "slicer-box"}, ui.span("Period", class_="slicer-label"), 
             ui.popover(
                 ui.tags.button(ui.output_text("txt_period"), class_="tree-btn"), 
@@ -512,29 +518,42 @@ app_ui = ui.page_fluid(
                 placement="bottom"
             )
         ),
-        # 2. Universal Slicers
+        # SLOT 2: Department (Always)
         slicer_box("Department", "s_dept", DB.Lists['D']),
-        slicer_box("Employee Name", "s_emp", DB.Lists['E']),
-        slicer_box("Employment Type", "s_et", DB.Lists['ET']),
         
-        # 3. Conditional Slicers (JS Toggle prevents DOM destruction)
-        ui.panel_conditional("input.tabs != 'Attendance'", slicer_box("Leave Type", "s_lt", DB.Lists['LT'])),
-        ui.panel_conditional("input.tabs != 'Analysis'", slicer_box("Reporting Manager", "s_mgr", DB.Lists['M'])),
-        ui.panel_conditional("input.tabs != 'Analysis'", slicer_box("Attendance Type", "s_at", DB.Lists['AT'])),
-        ui.panel_conditional("input.tabs == 'Analysis'", slicer_box("Project Name", "s_proj", DB.Lists['PN'])),
-        ui.panel_conditional("input.tabs == 'Analysis'", slicer_box("Project Manager", "s_pm", DB.Lists['PM'])),
-        ui.panel_conditional("input.tabs == 'Attendance'", slicer_box("Workflow State", "s_ws", DB.Lists['WS']))
+        # SLOT 3: Employee Name (Always)
+        slicer_box("Employee Name", "s_emp", DB.Lists['E']),
+
+        # SLOT 4: Conditional
+        ui.panel_conditional("input.tabs == 'Summary'", slicer_box("Leave Type", "s_lt_sum", DB.Lists['LT'])),
+        ui.panel_conditional("input.tabs == 'Analysis'", slicer_box("Leave Type", "s_lt_ana", DB.Lists['LT'])),
+        ui.panel_conditional("input.tabs == 'Attendance'", slicer_box("Employment Type", "s_et_att", DB.Lists['ET'])),
+
+        # SLOT 5: Conditional
+        ui.panel_conditional("input.tabs == 'Summary'", slicer_box("Employment Type", "s_et_sum", DB.Lists['ET'])),
+        ui.panel_conditional("input.tabs == 'Analysis'", slicer_box("Project Name", "s_proj_ana", DB.Lists['PN'])),
+        ui.panel_conditional("input.tabs == 'Attendance'", slicer_box("Attendance Type", "s_at_att", DB.Lists['AT'])),
+
+        # SLOT 6: Conditional
+        ui.panel_conditional("input.tabs == 'Summary'", slicer_box("Reporting Manager", "s_mgr_sum", DB.Lists['M'])),
+        ui.panel_conditional("input.tabs == 'Analysis'", slicer_box("Employment Type", "s_et_ana", DB.Lists['ET'])),
+        ui.panel_conditional("input.tabs == 'Attendance'", slicer_box("Reporting Manager", "s_mgr_att", DB.Lists['M'])),
+
+        # SLOT 7: Conditional
+        ui.panel_conditional("input.tabs == 'Summary'", slicer_box("Attendance Type", "s_at_sum", DB.Lists['AT'])),
+        ui.panel_conditional("input.tabs == 'Analysis'", slicer_box("Project Manager", "s_pm_ana", DB.Lists['PM'])),
+        ui.panel_conditional("input.tabs == 'Attendance'", slicer_box("Workflow State", "s_ws_att", DB.Lists['WS'])),
     ),
 
     ui.navset_tab(
         # --- TAB 1: SUMMARY ---
         ui.nav_panel("Summary",
             ui.div({"style": "padding:15px"},
-                ui.div({"class": "card"}, ui.div("Leave Application Trend", class_="card-title"), output_widget("plt_trend")),
+                ui.div({"class": "card"}, ui.div("Top 10 Employees with Frequent Unplanned Leave Instances", class_="card-title"), output_widget("plt_top")),
                 ui.layout_columns(
                     ui.div({"class": "card"}, ui.div("Monthly Leave Utilization Trend", class_="card-title"), output_widget("plt_util")),
-                    ui.div({"class": "card"}, ui.div("Top 10 Employees with Frequent Unplanned Leave Instances", class_="card-title"), output_widget("plt_top")),
-                    col_widths=[4, 8]
+                    ui.div({"class": "card"}, ui.div("Leave Application Trend", class_="card-title"), output_widget("plt_trend")),
+                    col_widths=[6, 6]
                 )
             )
         ),
@@ -678,28 +697,37 @@ def server(input, output, session):
         with reactive.isolate():
             if v != S_STATE['month'](): S_STATE['month'].set(v)
 
-    # General Slicer Syncers
-    def create_syncer(inp_id, state_key):
+    # General Slicer Syncers (Refactored to handle multiple IDs per state key)
+    def create_syncer(inp_list, state_key):
+        if isinstance(inp_list, str): inp_list = [inp_list]
+        
         @reactive.effect
-        @reactive.event(getattr(input, inp_id))
-        def _sync():
+        def _sync_multi():
             if not is_dash(): return
-            v = getattr(input, inp_id)()
-            if v is not None:
-                with reactive.isolate():
-                    if v != S_STATE[state_key]():
-                        S_STATE[state_key].set(v)
-        return _sync
+            # Capture any change in the list of inputs
+            for inp_id in inp_list:
+                v = getattr(input, inp_id)()
+                if v is not None:
+                    with reactive.isolate():
+                        if v != S_STATE[state_key]():
+                            # Update global state
+                            S_STATE[state_key].set(v)
+                            # Sync all other inputs for this key
+                            for other_id in inp_list:
+                                if other_id != inp_id:
+                                    ui.update_select(other_id, selected=v)
+                            break # One update is enough per trigger
+        return _sync_multi
 
     _sync_dept = create_syncer('s_dept', 'dept')
     _sync_emp = create_syncer('s_emp', 'emp')
-    _sync_et = create_syncer('s_et', 'et')
-    _sync_lt = create_syncer('s_lt', 'lt')
-    _sync_mgr = create_syncer('s_mgr', 'mgr')
-    _sync_proj = create_syncer('s_proj', 'proj')
-    _sync_pm = create_syncer('s_pm', 'pm')
-    _sync_ws = create_syncer('s_ws', 'ws')
-    _sync_at = create_syncer('s_at', 'at')
+    _sync_et = create_syncer(['s_et_sum', 's_et_ana', 's_et_att'], 'et')
+    _sync_lt = create_syncer(['s_lt_sum', 's_lt_ana'], 'lt')
+    _sync_mgr = create_syncer(['s_mgr_sum', 's_mgr_att'], 'mgr')
+    _sync_proj = create_syncer('s_proj_ana', 'proj')
+    _sync_pm = create_syncer('s_pm_ana', 'pm')
+    _sync_ws = create_syncer('s_ws_att', 'ws')
+    _sync_at = create_syncer(['s_at_sum', 's_at_att'], 'at')
 
     def filter_df(raw_df):
         if raw_df is None or raw_df.empty: return pd.DataFrame()
@@ -880,6 +908,7 @@ def server(input, output, session):
                      custom_data=['Month_Year', 'Leave Application Category'])
         fig.update_layout(xaxis={'categoryorder':'array', 'categoryarray': month_order},
                           xaxis_title="Month", yaxis_title="Application Count",
+                          bargap=0.4, # Make bars thinner
                           clickmode='event')
         fig.update_traces(
             textfont=dict(size=10, weight="bold"),
@@ -973,8 +1002,7 @@ def server(input, output, session):
             
         val_col = 'Total Leave Days' if 'Total Leave Days' in un.columns else 'total_leave_days'
         
-        # 2. Aggregate Metrics (Matching User DAX)
-        # Instances = COUNTROWS, Days = SUM(Total Leave Days)
+        # 2. Aggregate Metrics (Matching Original Logic)
         top = un.groupby('employee_name_t').agg(**{
             "Leave Instances": ('user_id', 'count'), 
             "Leave Days": (val_col, 'sum')
@@ -1003,6 +1031,10 @@ def server(input, output, session):
             legend_title="",
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
             clickmode='event'
+        )
+        fig.update_traces(
+            textfont=dict(size=10, weight="bold"),
+            hovertemplate="<b>%{y}</b><br>%{customdata[1]}: %{x}<br><i>Click to Drill Through</i><extra></extra>"
         )
         fig.update_traces(
             textfont=dict(size=10, weight="bold"),
@@ -1047,8 +1079,7 @@ def server(input, output, session):
         res['Available Employees'] = (total_count - res['Employees on Leave']).clip(lower=0)
         
         # 6. Plot Side-by-Side Bars
-        # Use simple day numbers if single month, or short date if multiple
-        # Always use day + short month (e.g., "05 Feb") for clear context
+        # Reverting to simple day numbers with month name (e.g., "05 Oct")
         res['DayLabel'] = res['Date'].dt.strftime('%d %b')
             
         m = res.melt(id_vars=['Date', 'DayLabel'], value_vars=['Available Employees', 'Employees on Leave'], 
@@ -1057,6 +1088,12 @@ def server(input, output, session):
         fig = px.bar(m, x='DayLabel', y='Count', color='Category', barmode='group', text_auto=True,
                      color_discrete_map={"Available Employees": "#00adef", "Employees on Leave": "#1f3d7a"},
                      custom_data=['Date', 'Category'])
+        
+        # Add vertical dotted lines between months
+        unique_days = m.sort_values('Date')['Date'].unique()
+        for i in range(1, len(unique_days)):
+            if pd.to_datetime(unique_days[i]).month != pd.to_datetime(unique_days[i-1]).month:
+                fig.add_vline(x=i - 0.5, line_dash="dash", line_color="#64748b", line_width=2)
         
         fig.update_layout(xaxis_title="Day of Month", yaxis_title="Employee Count", 
                           xaxis={'type': 'category'}, clickmode='event',
@@ -1135,6 +1172,12 @@ def server(input, output, session):
                      color_discrete_map=colors,
                      custom_data=['dt_norm', 'presence_type'])
         
+        # Add vertical dotted lines between months
+        unique_days = c.sort_values('dt_norm')['dt_norm'].unique()
+        for i in range(1, len(unique_days)):
+            if pd.to_datetime(unique_days[i]).month != pd.to_datetime(unique_days[i-1]).month:
+                fig.add_vline(x=i - 0.5, line_dash="dash", line_color="#64748b", line_width=2)
+        
         fig.update_layout(xaxis_title="Day of Month", yaxis_title="Count", xaxis={'type': 'category'}, clickmode='event')
         fig.update_traces(
             textposition='inside', textfont=dict(size=9, weight="bold"), textangle=0, cliponaxis=False,
@@ -1178,7 +1221,7 @@ def server(input, output, session):
             hovertemplate="<b>%{x}</b><br>Total Emp WFO: %{y}<br>Avg Office Hours: %{customdata[1]:.2f}h<br><i>Click to Drill Through</i><extra></extra>"
         )
         
-        fig.update_layout(xaxis_title="Office Hrs Bucket", yaxis_title="Total Emp WFO", clickmode='event')
+        fig.update_layout(xaxis_title="Office Hrs Bucket", yaxis_title="Total Emp WFO", clickmode='event', bargap=0.6)
         return stylize(fig)
 
     @render_plotly
