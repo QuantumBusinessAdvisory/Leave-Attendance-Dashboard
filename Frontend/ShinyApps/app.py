@@ -164,7 +164,7 @@ app_ui = ui.page_fluid(
         :root {
             --primary: #1f3d7a;
             --accent: #F6A9CA;
-            --bg: #f8fafc;
+            --bg: #FFF0F5;
             --card-bg: #ffffff;
             --text-main: #334155;
             --text-light: #64748b;
