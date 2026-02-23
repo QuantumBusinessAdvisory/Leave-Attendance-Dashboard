@@ -1079,10 +1079,11 @@ def server(input, output, session):
         res['Available Employees'] = (total_count - res['Employees on Leave']).clip(lower=0)
         
         # 6. Plot Side-by-Side Bars
-        # Reverting to simple day numbers with month name (e.g., "05 Oct")
+        # Use full "Day Month" for categorical ID (separate months), but override display with day only.
         res['DayLabel'] = res['Date'].dt.strftime('%d %b')
+        res['DayNum'] = res['Date'].dt.strftime('%d').str.lstrip('0')
             
-        m = res.melt(id_vars=['Date', 'DayLabel'], value_vars=['Available Employees', 'Employees on Leave'], 
+        m = res.melt(id_vars=['Date', 'DayLabel', 'DayNum'], value_vars=['Available Employees', 'Employees on Leave'], 
                      var_name='Category', value_name='Count')
         
         fig = px.bar(m, x='DayLabel', y='Count', color='Category', barmode='group', text_auto=True,
@@ -1090,25 +1091,50 @@ def server(input, output, session):
                      custom_data=['Date', 'Category'])
         
         # Add vertical dotted lines between months
-        unique_days = m.sort_values('Date')['Date'].unique()
+        unique_m = m.sort_values('Date').drop_duplicates('DayLabel').reset_index(drop=True)
+        unique_days = unique_m['Date'].tolist()
         for i in range(1, len(unique_days)):
             if pd.to_datetime(unique_days[i]).month != pd.to_datetime(unique_days[i-1]).month:
-                fig.add_vline(x=i - 0.5, line_dash="dash", line_color="#64748b", line_width=2)
+                fig.add_vline(x=i - 0.5, line_dash="dash", line_color="#64748b", line_width=1.5)
         
-        fig.update_layout(xaxis_title="Day of Month", yaxis_title="Employee Count", 
-                          xaxis={'type': 'category'}, clickmode='event',
+        # Add centered month labels below the axis
+        month_groups = unique_m.groupby(unique_m['Date'].dt.to_period('M'))
+        for period, group in month_groups:
+            mid_x = group.index.to_series().mean()
+            fig.add_annotation(
+                text=period.strftime('%B %Y'),
+                x=mid_x, y=-0.12, # Closer to axis
+                xref="x", yref="paper",
+                showarrow=False,
+                font=dict(size=11, color="#1e293b"), # Removed weight="bold"
+                align="center"
+            )
+
+        fig.update_layout(xaxis_title="", yaxis_title="Employee Count", 
+                          margin=dict(b=80), # Space for both labels
+                          xaxis=dict(
+                              type='category',
+                              tickvals=unique_m['DayLabel'].tolist(),
+                              ticktext=unique_m['DayNum'].tolist()
+                          ), 
+                          clickmode='event',
                           yaxis=dict(range=[0, total_count * 1.15])) # Padding for outside text
         
+        # Add central "Day of Month" title at the bottom
+        fig.add_annotation(
+            text="Day of Month",
+            x=0.5, y=-0.25, # Positioned below month labels
+            xref="paper", yref="paper",
+            showarrow=False,
+            font=dict(size=12, color="#1e293b", weight="bold"),
+            align="center"
+        )
+        
         fig.update_traces(
-            selector=dict(name="Available Employees"),
-            textposition='inside', textfont=dict(size=10, weight="bold"), textangle=0,
+            textfont=dict(size=10, weight="bold"),
             hovertemplate="<b>%{x}</b><br>Category: %{customdata[1]}<br>Count: %{y}<br><i>Click to Drill Through</i><extra></extra>"
         )
-        fig.update_traces(
-            selector=dict(name="Employees on Leave"),
-            textposition='outside', textfont=dict(size=10, weight="bold"), textangle=0, cliponaxis=False,
-            hovertemplate="<b>%{x}</b><br>Category: %{customdata[1]}<br>Count: %{y}<br><i>Click to Drill Through</i><extra></extra>"
-        )
+        
         return stylize(fig)
 
     @render.table
@@ -1154,10 +1180,11 @@ def server(input, output, session):
         
         # Sort and create day labels
         df = df.sort_values('dt')
-        # Always use day + short month (e.g., "05 Feb") for clear context
+        # Use full "Day Month" for categorical ID (separate months), but override display with day only.
         df['DayLabel'] = df['dt'].dt.strftime('%d %b')
+        df['DayNum'] = df['dt'].dt.strftime('%d').str.lstrip('0')
             
-        c = df.groupby(['dt_norm', 'DayLabel', 'presence_type'], sort=False).size().reset_index(name='Count')
+        c = df.groupby(['dt_norm', 'DayLabel', 'DayNum', 'presence_type'], sort=False).size().reset_index(name='Count')
         
         # Consistent color map
         colors = {
@@ -1173,12 +1200,43 @@ def server(input, output, session):
                      custom_data=['dt_norm', 'presence_type'])
         
         # Add vertical dotted lines between months
-        unique_days = c.sort_values('dt_norm')['dt_norm'].unique()
+        unique_m = c.sort_values('dt_norm').drop_duplicates('DayLabel').reset_index(drop=True)
+        unique_days = unique_m['dt_norm'].tolist()
         for i in range(1, len(unique_days)):
             if pd.to_datetime(unique_days[i]).month != pd.to_datetime(unique_days[i-1]).month:
-                fig.add_vline(x=i - 0.5, line_dash="dash", line_color="#64748b", line_width=2)
+                fig.add_vline(x=i - 0.5, line_dash="dash", line_color="#64748b", line_width=1.5)
         
-        fig.update_layout(xaxis_title="Day of Month", yaxis_title="Count", xaxis={'type': 'category'}, clickmode='event')
+        # Add centered month labels below the axis
+        month_groups = unique_m.groupby(unique_m['dt_norm'].dt.to_period('M'))
+        for period, group in month_groups:
+            mid_x = group.index.to_series().mean()
+            fig.add_annotation(
+                text=period.strftime('%B %Y'),
+                x=mid_x, y=-0.12, # Closer to axis
+                xref="x", yref="paper",
+                showarrow=False,
+                font=dict(size=11, color="#1e293b"),
+                align="center"
+            )
+
+        fig.update_layout(xaxis_title="", yaxis_title="Count", 
+                          margin=dict(b=80), 
+                          xaxis=dict(
+                              type='category',
+                              tickvals=unique_m['DayLabel'].tolist(),
+                              ticktext=unique_m['DayNum'].tolist()
+                          ), 
+                          clickmode='event')
+        
+        # Add central "Day of Month" title at the bottom
+        fig.add_annotation(
+            text="Day of Month",
+            x=0.5, y=-0.25, # Positioned below month labels
+            xref="paper", yref="paper",
+            showarrow=False,
+            font=dict(size=12, color="#1e293b", weight="bold"),
+            align="center"
+        )
         fig.update_traces(
             textposition='inside', textfont=dict(size=9, weight="bold"), textangle=0, cliponaxis=False,
             hovertemplate="<b>%{x}</b><br>Type: %{customdata[1]}<br>Count: %{y}<br><i>Click to Drill Through</i><extra></extra>"
