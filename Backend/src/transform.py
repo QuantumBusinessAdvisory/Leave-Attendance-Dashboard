@@ -82,7 +82,13 @@ def transform_data():
         df = process_leave_balance(raw_data) if endpoint == 'leave_balance' else process_generic(raw_data)
         if not df.empty:
             df = apply_calculations(df, endpoint)
+            # Save as CSV for backward compatibility/human readability
             df.to_csv(os.path.join(DATA_PROCESSED_DIR, f"{endpoint}.csv"), index=False)
+            # Save as Parquet for high-performance loading in Shiny
+            try:
+                df.to_parquet(os.path.join(DATA_PROCESSED_DIR, f"{endpoint}.parquet"), index=False)
+            except Exception as e:
+                print(f"[WARNING] Could not save {endpoint}.parquet: {e}")
     try: create_date_table()
     except: pass
 
@@ -115,6 +121,10 @@ def create_date_table():
     df_date['IsWorkingDay'] = ((df_date['IsWeekend'] == 0) & (df_date['IsHoliday'] == 0)).astype(int)
     df_date.drop(columns=['DateStr'], inplace=True)
     df_date.to_csv(os.path.join(DATA_PROCESSED_DIR, "date_table.csv"), index=False)
+    try:
+        df_date.to_parquet(os.path.join(DATA_PROCESSED_DIR, "date_table.parquet"), index=False)
+    except Exception as e:
+        print(f"[WARNING] Could not save date_table.parquet: {e}")
 
 if __name__ == "__main__":
     transform_data()

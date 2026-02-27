@@ -16,3 +16,6 @@ API_ENDPOINTS = {
     "holidays": "https://hr.qbadvisory.com/api/method/hrms.api.employee.get_all_holidays",
     "users_details": "https://hr.qbadvisory.com/api/method/hrms.api.employee.get_all_users_details"
 }
+
+# ETL Cache Threshold (hours) - Skip refresh if data is newer than this
+ETL_CACHE_THRESHOLD_HOURS = 4

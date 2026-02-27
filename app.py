@@ -13,33 +13,67 @@ BACKEND_DIR = os.path.join(BASE_DIR, "Backend")
 DASHBOARD_DIR = os.path.join(BASE_DIR, "Frontend", "ShinyApps")
 
 # ====================================================
-#   PHASE 1: BACKEND ETL (Data Refresh)
+#   PHASE 1 & 2: BACKEND ETL (Data Refresh)
 # ====================================================
 # Add Backend to sys.path so its modules resolve correctly
 sys.path.insert(0, BACKEND_DIR)
 
-try:
-    from src.extract import extract_data
-    from src.transform import transform_data
-    import Config as config
+def run_etl_if_needed():
+    try:
+        from src.extract import extract_data
+        from src.transform import transform_data
+        import Config as config
+        from concurrent.futures import ThreadPoolExecutor
+        import time
 
-    print("=" * 60)
-    print("  PHASE 1: Data Extraction (Fetching from HRMS APIs)")
-    print("=" * 60)
-    for name, url in config.API_ENDPOINTS.items():
-        extract_data(name, url, config.API_HEADERS)
+        # 1. Check if ETL is needed (Caching Logic)
+        PROCESSED_DATA_DIR = os.path.join(BACKEND_DIR, "data", "processed")
+        threshold_seconds = config.ETL_CACHE_THRESHOLD_HOURS * 3600
+        
+        # We check the 'attendance' file as a proxy for data freshness
+        check_file = os.path.join(PROCESSED_DATA_DIR, "attendance.parquet")
+        if not os.path.exists(check_file):
+            check_file = os.path.join(PROCESSED_DATA_DIR, "attendance.csv")
 
-    print("\n" + "=" * 60)
-    print("  PHASE 2: Data Transformation")
-    print("=" * 60)
-    transform_data()
-    print("[SUCCESS] ETL Pipeline completed.\n")
+        if os.path.exists(check_file):
+            file_age = time.time() - os.path.getmtime(check_file)
+            if file_age < threshold_seconds:
+                print("=" * 60)
+                print(f" [INFO] Data is fresh (age: {int(file_age/60)} mins). Skipping ETL.")
+                print(f" [INFO] Threshold: {config.ETL_CACHE_THRESHOLD_HOURS} hours.")
+                print("=" * 60)
+                return
 
-except Exception as e:
-    # If ETL fails, log the error but don't crash — 
-    # the dashboard can still serve if data from a prior run exists.
-    print(f"\n[WARNING] ETL Pipeline failed: {e}")
-    print("[WARNING] Dashboard will attempt to load with existing data.\n")
+        print("=" * 60)
+        print(f"  PHASE 1: Parallel Data Extraction (Fetching from HRMS)")
+        print("=" * 60)
+        start_time = time.time()
+        
+        # Use ThreadPoolExecutor for parallel API calls
+        with ThreadPoolExecutor(max_workers=len(config.API_ENDPOINTS)) as executor:
+            futures = [
+                executor.submit(extract_data, name, url, config.API_HEADERS)
+                for name, url in config.API_ENDPOINTS.items()
+            ]
+            for future in futures:
+                future.result() # Wait for all to finish
+
+        print(f"\n[SUCCESS] Extraction completed in {time.time() - start_time:.2f} seconds.")
+
+        print("\n" + "=" * 60)
+        print("  PHASE 2: Data Transformation")
+        print("=" * 60)
+        start_trans = time.time()
+        transform_data()
+        print(f"[SUCCESS] Transformation completed in {time.time() - start_trans:.2f} seconds.")
+        print(f"[TOTAL ETL TIME] {time.time() - start_time:.2f} seconds.\n")
+
+    except Exception as e:
+        print(f"\n[WARNING] ETL Pipeline failed: {e}")
+        print("[WARNING] Dashboard will attempt to load with existing data.\n")
+
+# Run ETL before starting the dashboard
+run_etl_if_needed()
 
 # ====================================================
 #   PHASE 3: FRONTEND DASHBOARD

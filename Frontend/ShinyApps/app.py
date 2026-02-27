@@ -222,8 +222,8 @@ app_ui = ui.page_fluid(
             text-align: center;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: var(--shadow);
-            width: 13.5%; 
-            min-width: 150px;
+            width: calc(14.28% - 12px); 
+            min-width: 120px;
             height: 65px;
             gap: 2px;
         }
