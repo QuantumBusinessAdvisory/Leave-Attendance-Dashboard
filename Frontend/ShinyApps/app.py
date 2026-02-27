@@ -315,14 +315,14 @@ app_ui = ui.page_fluid(
 
         .tree-container { min-width: 220px; padding: 15px; }
         table { font-size: 0.85rem !important; width: 100%; border-collapse: collapse; }
-        th { background: #f8fafc; color: var(--primary); font-weight: 700; padding: 12px; border-bottom: 2px solid #e2e8f0; border-right: 1px solid #cbd5e1; text-align: center; white-space: nowrap; }
-        td { padding: 12px; border-bottom: 1px solid #f1f5f9; border-right: 1px solid #cbd5e1; white-space: nowrap; text-align: center; color: var(--text-main); }
+        th { background: #f8fafc; color: var(--primary); font-weight: 700; padding: 12px; border-bottom: 2px solid #e2e8f0; border-right: 1px solid #cbd5e1; text-align: left; white-space: nowrap; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; border-right: 1px solid #cbd5e1; white-space: nowrap; text-align: left; color: var(--text-main); }
         th:last-child, td:last-child { border-right: none; }
         .total-row { font-weight: 700; background: #f8fafc; }
         .table-scroll { overflow: auto; max-height: 480px; border: 1px solid #e2e8f0; border-radius: 12px; }
         table thead th { position: sticky; top: 0; background: #f8fafc; z-index: 10; }
-        table thead th:first-child { position: sticky; left: 0; z-index: 20; text-align: center; }
-        table tbody tr td:first-child { position: sticky; left: 0; background: #fff; z-index: 5; font-weight: 600; text-align: center; }
+        table thead th:first-child { position: sticky; left: 0; z-index: 20; text-align: left; }
+        table tbody tr td:first-child { position: sticky; left: 0; background: #fff; z-index: 5; font-weight: 600; text-align: left; }
         
         /* Modern Buttons */
         .btn-primary { 
