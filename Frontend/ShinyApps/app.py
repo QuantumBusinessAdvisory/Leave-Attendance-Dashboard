@@ -302,6 +302,9 @@ app_ui = ui.page_fluid(
             margin-bottom: 20px; 
             box-shadow: var(--shadow); 
             transition: box-shadow 0.3s;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
         }
         .card:hover { box-shadow: var(--shadow-md); }
         .card-title { 
@@ -311,6 +314,9 @@ app_ui = ui.page_fluid(
             margin-bottom: 12px; 
             border-left: 4px solid var(--accent); 
             padding-left: 10px; 
+            min-height: 2.5rem;
+            display: flex;
+            align-items: center;
         }
 
         .tree-container { min-width: 220px; padding: 15px; }
@@ -549,11 +555,11 @@ app_ui = ui.page_fluid(
         # --- TAB 1: SUMMARY ---
         ui.nav_panel("Summary",
             ui.div({"style": "padding:15px"},
-                ui.div({"class": "card"}, ui.div("Top 10 Employees with Frequent Unplanned Leave Instances", class_="card-title"), output_widget("plt_top")),
                 ui.layout_columns(
+                    ui.div({"class": "card"}, ui.div("Top 10 Employees with Frequent Unplanned Leave Instances", class_="card-title"), output_widget("plt_top")),
                     ui.div({"class": "card"}, ui.div("Monthly Leave Utilization Trend", class_="card-title"), output_widget("plt_util")),
                     ui.div({"class": "card"}, ui.div("Leave Application Trend", class_="card-title"), output_widget("plt_trend")),
-                    col_widths=[6, 6]
+                    col_widths=[4, 4, 4]
                 )
             )
         ),
@@ -854,8 +860,9 @@ def server(input, output, session):
     def stylize(fig):
         fig.update_layout(
             template="plotly_white",
-            margin=dict(l=20, r=20, t=10, b=20),
-            font=dict(family="Inter, sans-serif", color="#334155", size=11),
+            height=400,
+            margin=dict(l=10, r=10, t=30, b=40),
+            font=dict(family="Inter, sans-serif", color="#334155", size=9),
             legend=dict(
                 orientation="h",
                 yanchor="bottom",
@@ -863,11 +870,11 @@ def server(input, output, session):
                 xanchor="center",
                 x=0.5,
                 title_text='',
-                font=dict(size=10)
+                font=dict(size=8)
             ),
             hoverlabel=dict(
                 bgcolor="white",
-                font_size=12,
+                font_size=10,
                 font_family="Inter, sans-serif"
             )
         )
@@ -899,19 +906,31 @@ def server(input, output, session):
         
         if df.empty: return px.bar()
         
-        # Determine sorted month order from filtered data
-        month_order = df.sort_values('dt')['Month_Year'].unique().tolist()
+        # Determine sorted month order from calendar table for consistent X-axis
+        dt_df = filter_df(DB.DF.get('date_table', pd.DataFrame()))
+        dt_df['Month_Year'] = pd.to_datetime(dt_df['dt']).dt.strftime('%b %Y')
+        month_order = dt_df.sort_values('dt')['Month_Year'].unique().tolist()
 
-        c = df.groupby(['Month_Year', 'Leave Application Category'], sort=False).size().reset_index(name='Count')
+        if df.empty:
+            c = pd.DataFrame(columns=['Month_Year', 'Leave Application Category', 'Count'])
+        else:
+            c = df.groupby(['Month_Year', 'Leave Application Category'], sort=False).size().reset_index(name='Count')
+        
+        # Ensure all months in month_order are present in c, even if zero
+        if month_order:
+            all_cats = ["Applied Before Availing", "Applied Post Availing"]
+            template = pd.DataFrame([(m, cat) for m in month_order for cat in all_cats], columns=['Month_Year', 'Leave Application Category'])
+            c = template.merge(c, on=['Month_Year', 'Leave Application Category'], how='left').fillna(0)
+
         fig = px.bar(c, x='Month_Year', y='Count', color='Leave Application Category', barmode='group', text_auto=True, 
                      color_discrete_map={"Applied Before Availing": "#00adef", "Applied Post Availing": "#1f3d7a"},
                      custom_data=['Month_Year', 'Leave Application Category'])
         fig.update_layout(xaxis={'categoryorder':'array', 'categoryarray': month_order},
-                          xaxis_title="Month", yaxis_title="Application Count",
-                          bargap=0.4, # Make bars thinner
+                          xaxis_title=None, yaxis_title="App Count",
+                          bargap=0.3, # Adjust for narrow columns
                           clickmode='event')
         fig.update_traces(
-            textfont=dict(size=10, weight="bold"),
+            textfont=dict(size=9, weight="bold"),
             hovertemplate="<b>%{x}</b><br>Category: %{customdata[1]}<br>Count: %{y}<br><i>Click to Drill Through</i><extra></extra>"
         )
         return stylize(fig)
@@ -960,14 +979,14 @@ def server(input, output, session):
         # Active Employees (Filtered by current slicers via filter_df)
         active_emp_count = len(filter_df(DB.DF['users_details']))
         
-        # 4. Merge and Calculate Impact
-        res = res_leave.merge(res_wd, on='Month_Year', how='inner')
+        # 4. Merge and Calculate Impact (Left join from Working Day calendar to keep all months)
+        res = res_wd.merge(res_leave, on='Month_Year', how='left').fillna(0)
         res['Active EMP'] = active_emp_count
         res['Total Available Org Hours'] = res['Active EMP'] * 8 * res['Working Days']
         res['Leave Impact %'] = (res['Total Leave Hours'] / res['Total Available Org Hours'].replace(0, 1)) * 100
         
-        # Determine sorted month order from filtered data for X-axis
-        month_order = df.sort_values('dt')['Month_Year'].unique().tolist()
+        # Determine sorted month order from calendar data for X-axis
+        month_order = dt_df.sort_values('dt')['Month_Year'].unique().tolist()
         
         fig = px.line(res, x='Month_Year', y='Leave Impact %', text=res['Leave Impact %'].map('{:.2f}%'.format), markers=True,
                       custom_data=['Month_Year', 'Total Leave Hours', 'Total Available Org Hours', 'Working Days'])
@@ -981,12 +1000,12 @@ def server(input, output, session):
             "<i>Click to Drill Through</i><extra></extra>"
         )
         
-        fig.update_traces(line=dict(color="#00adef", width=3), textposition='top center', 
-                          textfont=dict(size=10, weight="bold"),
+        fig.update_traces(line=dict(color="#00adef", width=2), textposition='top center', 
+                          textfont=dict(size=9, weight="bold"),
                           hovertemplate=tooltip)
         fig.update_yaxes(ticksuffix="%", griddash="dot")
         fig.update_layout(xaxis={'categoryorder':'array', 'categoryarray': month_order},
-                          xaxis_title="Month", yaxis_title="Leave Utilization Impact %",
+                          xaxis_title=None, yaxis_title="Impact %",
                           clickmode='event')
         return stylize(fig)
 
