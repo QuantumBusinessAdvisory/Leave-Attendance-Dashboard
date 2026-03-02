@@ -1036,6 +1036,10 @@ def server(input, output, session):
                      color_discrete_map={"Leave Instances": "#5FB6FF", "Leave Days": "#1f3d7a"},
                      custom_data=['employee_name_t', 'Metric'])
         
+        # Apply global styles first
+        fig = stylize(fig)
+
+        # Override for precision alignment
         fig.update_layout(
             xaxis_title="Instances / Total Days",
             yaxis_title="",
@@ -1044,20 +1048,22 @@ def server(input, output, session):
                 'categoryarray': top['employee_name_t'].tolist()[::-1],
                 'automargin': True
             },
-            margin=dict(l=5, r=10, t=10, b=40), # Very tight left margin to shift labels left
+            margin=dict(l=0, r=10, t=10, b=40), # FLUSH LEFT: Override global 5px left margin
             legend_title="",
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+            legend=dict(
+                orientation="h", 
+                yanchor="bottom", 
+                y=1.02, 
+                xanchor="center", 
+                x=0.5
+            ),
             clickmode='event'
         )
         fig.update_traces(
             textfont=dict(size=10, weight="bold"),
             hovertemplate="<b>%{y}</b><br>%{customdata[1]}: %{x}<br><i>Click to Drill Through</i><extra></extra>"
         )
-        fig.update_traces(
-            textfont=dict(size=10, weight="bold"),
-            hovertemplate="<b>%{y}</b><br>%{customdata[1]}: %{x}<br><i>Click to Drill Through</i><extra></extra>"
-        )
-        return stylize(fig)
+        return fig
 
     # --- TAB 2 (Analysis) ---
     @render_plotly
