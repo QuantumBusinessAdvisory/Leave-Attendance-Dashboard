@@ -1109,6 +1109,10 @@ def server(input, output, session):
         m = res.melt(id_vars=['Date', 'DayLabel', 'DayNum'], value_vars=['Available Employees', 'Employees on Leave'], 
                      var_name='Category', value_name='Count')
         
+        fig = px.bar(m, x='DayLabel', y='Count', color='Category', barmode='group', text_auto=True,
+                     color_discrete_map={"Available Employees": "#00adef", "Employees on Leave": "#1f3d7a"},
+                     custom_data=['Date', 'Category'])
+        
         # Add vertical dotted lines between months
         unique_m = m.sort_values('Date').drop_duplicates('DayLabel').reset_index(drop=True)
         unique_days = unique_m['Date'].tolist()
