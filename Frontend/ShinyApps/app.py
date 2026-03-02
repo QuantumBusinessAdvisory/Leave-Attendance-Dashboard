@@ -1235,6 +1235,8 @@ def server(input, output, session):
         df['DayLabel'] = df['dt'].dt.strftime('%d %b')
         df['DayNum'] = df['dt'].dt.strftime('%d').str.lstrip('0')
             
+        df['presence_type'] = df['presence_type'].fillna('').replace('', 'On Leave')
+            
         c = df.groupby(['dt_norm', 'DayLabel', 'DayNum', 'presence_type'], sort=False).size().reset_index(name='Count')
         
         # Consistent color map
@@ -1243,7 +1245,8 @@ def server(input, output, session):
             "Work From Home": "#ff5a5f", 
             "On Duty": "#5c7cfa", 
             "Work From Anywhere": "#ffa94d", 
-            "Missed Entry": "#be4bdb"
+            "Missed Entry": "#be4bdb",
+            "On Leave": "#1f3d7a"
         }
         
         fig = px.bar(c, x='DayLabel', y='Count', color='presence_type', barmode='stack', text_auto=True,
