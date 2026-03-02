@@ -292,6 +292,13 @@ app_ui = ui.page_fluid(
             background: var(--accent) !important; 
             color: white !important;
         }
+        
+        /* Hide Drill Details Tabs from Nav Bar */
+        .nav-link[data-value="Summary Drill Details"],
+        .nav-link[data-value="Attendance Drill Details"],
+        .nav-link[data-value="Leave Drill Details"] {
+            display: none !important;
+        }
 
         /* Modern Cards */
         .card { 
