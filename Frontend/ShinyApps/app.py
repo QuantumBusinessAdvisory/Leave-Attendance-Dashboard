@@ -1039,7 +1039,12 @@ def server(input, output, session):
         fig.update_layout(
             xaxis_title="Instances / Total Days",
             yaxis_title="",
-            yaxis={'categoryorder':'array', 'categoryarray': top['employee_name_t'].tolist()[::-1]},
+            yaxis={
+                'categoryorder':'array', 
+                'categoryarray': top['employee_name_t'].tolist()[::-1],
+                'automargin': True
+            },
+            margin=dict(l=5, r=10, t=10, b=40), # Very tight left margin to shift labels left
             legend_title="",
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
             clickmode='event'
