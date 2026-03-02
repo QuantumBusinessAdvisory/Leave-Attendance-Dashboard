@@ -1163,7 +1163,9 @@ def server(input, output, session):
                               type='category',
                               tickvals=unique_m['DayLabel'].tolist(),
                               ticktext=unique_m['DayNum'].tolist(),
-                              showgrid=False # Remote vertical lines
+                              showgrid=False, # Remote vertical lines
+                              categoryorder='array',
+                              categoryarray=unique_m['DayLabel'].tolist()
                           ), 
                           clickmode='event',
                           yaxis=dict(
@@ -1278,7 +1280,10 @@ def server(input, output, session):
                           xaxis=dict(
                               type='category',
                               tickvals=unique_m['DayLabel'].tolist(),
-                              ticktext=unique_m['DayNum'].tolist()
+                              ticktext=unique_m['DayNum'].tolist(),
+                              categoryorder='array',
+                              categoryarray=unique_m['DayLabel'].tolist(),
+                              showgrid=False # Remote vertical lines
                           ), 
                           clickmode='event')
         
