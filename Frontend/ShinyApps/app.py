@@ -302,9 +302,6 @@ app_ui = ui.page_fluid(
             margin-bottom: 20px; 
             box-shadow: var(--shadow); 
             transition: box-shadow 0.3s;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
         }
         .card:hover { box-shadow: var(--shadow-md); }
         .card-title { 
@@ -314,9 +311,6 @@ app_ui = ui.page_fluid(
             margin-bottom: 12px; 
             border-left: 4px solid var(--accent); 
             padding-left: 10px; 
-            min-height: 2.5rem;
-            display: flex;
-            align-items: center;
         }
 
         .tree-container { min-width: 220px; padding: 15px; }
@@ -860,7 +854,6 @@ def server(input, output, session):
     def stylize(fig):
         fig.update_layout(
             template="plotly_white",
-            height=400,
             margin=dict(l=10, r=10, t=30, b=40),
             font=dict(family="Inter, sans-serif", color="#334155", size=9),
             legend=dict(
