@@ -1113,12 +1113,29 @@ def server(input, output, session):
                      color_discrete_map={"Available Employees": "#00adef", "Employees on Leave": "#1f3d7a"},
                      custom_data=['Date', 'Category'])
         
-        # Add vertical dotted lines between months
+        # Add background highlights for alternating months (#cccccc for 1st, 3rd, etc.)
+        # and vertical dotted lines between months
         unique_m = m.sort_values('Date').drop_duplicates('DayLabel').reset_index(drop=True)
         unique_days = unique_m['Date'].tolist()
+        
+        month_bounds = []
+        current_start = 0
         for i in range(1, len(unique_days)):
-            if pd.to_datetime(unique_days[i]).month != pd.to_datetime(unique_days[i-1]).month:
+            if unique_days[i].month != unique_days[i-1].month:
+                month_bounds.append((current_start, i - 1))
+                current_start = i
+                # Keep the divider line
                 fig.add_vline(x=i - 0.5, line_dash="dash", line_color="#64748b", line_width=1.5)
+        month_bounds.append((current_start, len(unique_days) - 1))
+        
+        # Apply highlights to 1st, 3rd, 5th months
+        for idx, (start, end) in enumerate(month_bounds):
+            if idx % 2 == 0:
+                fig.add_vrect(
+                    x0=start - 0.5, x1=end + 0.5,
+                    fillcolor="#cccccc", opacity=0.4,
+                    layer="below", line_width=0
+                )
         
         # Add centered month labels below the axis
         month_groups = unique_m.groupby(unique_m['Date'].dt.to_period('M'))
